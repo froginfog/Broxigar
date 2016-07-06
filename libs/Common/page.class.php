@@ -120,4 +120,9 @@ class page {
         $str .= $this->finish();
         echo $str;
     }
+
+    public function limit(){
+        $str = ' limit '.($this->thisPage - 1) * $this->pageSize.','.$this->pageSize;
+        return $str;
+    }
 }

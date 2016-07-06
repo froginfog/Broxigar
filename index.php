@@ -5,7 +5,5 @@ $config = include 'config.php';
 $router = include 'url.php';
 session_start();
 
-//$start = new router();
-//$start -> match($_GET['params'], $router);
-$a = new page(200, 6, 3);
-$a->outPut();
+$start = new router();
+$start -> match($_GET['params'], $router);
