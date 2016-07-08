@@ -5,7 +5,6 @@ class upload {
         'allowtype'    => ['jpg', 'gif', 'png', 'bmp'],
         'maxsize'      => 5*1024*1024,
         'israndomname' => true,
-        'isimg'        => true,
         'isthumb'      => false,
         'iswatermark'  => false,
         'thumb'        => [
@@ -140,6 +139,9 @@ class upload {
                 break;
             case 102:
                 $str .= "上传失败";
+                break;
+            default:
+                $str .= "未知错误";
         }
         return $str;
     }
@@ -148,7 +150,7 @@ class upload {
         $this->final = "";
         $res = true;
         if(!file_exists($this->uploadConfig['path']) || !is_writable($this->uploadConfig['path'])){
-            $this->errMsg[] = "${this->uploadConfig['path']}文件夹不存在。";
+            $this->errMsg[] = $this->uploadConfig['path'].'文件夹不存在。';
             $res = false;
         }
         $name = $_FILES[$fieldName]['name'];
@@ -170,13 +172,13 @@ class upload {
                     $this->errMsg[] = $this->getError(88);
                     $res = false;
                 }
-                if(is_uploaded_file($tmp_name[$i])) {
+                if(is_uploaded_file($tmp_name[$i]) && $res == true) {
                     if ($this->uploadConfig['israndomname']) {
                         $this->finalFileName = $this->getRandomName($this->oriName);
                     } else {
                         $this->finalFileName = $this->oriName;
                     }
-                    if(move_uploaded_file($tmp_name[$i], $this->uploadConfig['path'])){
+                    if(move_uploaded_file($tmp_name[$i], $this->uploadConfig['path'].'/'.$this->finalFileName)){
                         if($this->final == ""){
                             $sep = "";
                         }else{
