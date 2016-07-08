@@ -5,10 +5,10 @@ class verifycode {
     private $length;
     private $snow;
     private $line;
-    private $font = ['./static/font/Elephant.ttf'];
+    private $font = ['static/font/Elephant.ttf', 'arial.ttf'];
     private $chars = 'abcdefghkmnprstuvwxyzABCDEFGHKMNPRSTUVWXYZ23456789';
     private $img;
-    public $code; //外部调用获取验证码字符
+    private $code; //外部调用获取验证码字符
 
     /**
      * verifycode constructor.实例化时必须传入图片宽高，长度默认4，雪花、干扰线默认0
@@ -24,16 +24,24 @@ class verifycode {
         $this->length = $length;
         $this->snow = $snow;
         $this->line = $line;
-        $this->code = $this->getCode();
+        $this->code = $this->setCode();
     }
 
-    private function getCode(){
+    private function setCode(){
         $res = "";
         $len = strlen($this->chars) - 1;
-        for($i = 0; $i < $len; $i++){
+        for($i = 0; $i < $this->length; $i++){
             $res .= $this->chars[mt_rand(0, $len)];
         }
         return strtolower($res);
+    }
+
+    /**
+     * 调用得到验证码字符串
+     * @return string
+     */
+    public function getCode(){
+        return $this->code;
     }
 
     private function createBg(){
@@ -59,14 +67,14 @@ class verifycode {
 
     private function writeCode(){
         for($i = 0; $i < $this->length; $i++) {
-            $fontSize = mt_rand(15, 20);
+            $fontSize = mt_rand(20, 25);
             $angle = mt_rand(-30, 30);
             $x = mt_rand(2, 6) + $i * 100 / $this->length;
             $y = mt_rand(20, 25);
             $color = imagecolorallocate($this->img, mt_rand(20, 120), mt_rand(20, 120), mt_rand(20, 120));
             $font = array_rand($this->font);
             $str = substr($this->code, $i, 1);
-            imagettftext($this->img, $fontSize, $angle, $x, $y, $color, $font, $str);
+            imagettftext($this->img, $fontSize, $angle, $x, $y, $color, $this->font[$font], $str);
         }
     }
 
