@@ -1,6 +1,7 @@
 <?php
 class basicController {
     protected $view = null;
+    protected $url;
 
     function __construct()
     {
@@ -25,5 +26,10 @@ class basicController {
     final function notFound(){
         $this -> view -> assign('str', '404哟~');
         $this -> view -> display('404.html');
+    }
+
+    protected function goBack(){
+        $this->url = $_SERVER['HTTP_REFERER'];
+        header("location:$this->url");
     }
 }
