@@ -12,6 +12,7 @@ class router {
         //var_dump($ruler);
         foreach($ruler as $left=>$right){
             //echo $left;
+            $left = str_replace('/', '\/', $left);
             preg_match($left, $url, $res);
             if($res){
                 //var_dump($right);
