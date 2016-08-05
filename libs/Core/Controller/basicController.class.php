@@ -1,7 +1,6 @@
 <?php
 class basicController {
     protected $view = null;
-    protected $url;
 
     function __construct()
     {
@@ -16,6 +15,7 @@ class basicController {
         $this->view->cache_lifetime = $config['CACHE_LIFETIME'];
     }
     protected function Json($arr){
+        header("Content-type: application/json");
         echo json_encode($arr, JSON_HEX_TAG);
     }
 
@@ -24,12 +24,44 @@ class basicController {
     }
 
     final function notFound(){
-        $this -> view -> assign('str', '404哟~');
-        $this -> view -> display('404.html');
+        header('HTTP/1.1 404 Not Found');
+        header("status: 404 Not Found");
     }
 
-    protected function goBack(){
-        $this->url = $_SERVER['HTTP_REFERER'];
-        header("location:$this->url");
+    protected function goBack($url=null){
+        if(is_null($url)) {
+            $url = $_SERVER['HTTP_REFERER'];
+            header("location:$url");
+        }else{
+            global $router;
+            $start = new router();
+            $start -> match($url, $router);
+        }
+    }
+
+    /**
+     * 防止csrf 为表单添加token验证
+     * 设置token
+     * @param string $name token名
+     */
+    protected function setToken($name=null){
+        $tk_name = ($name == null) ? 'token' : $name;
+        if(!$_SESSION[$tk_name]){
+            $str = substr(md5(uniqid(microtime(), true)), 2, 6);
+            $_SESSION[$tk_name] = $str;
+        }
+    }
+
+    /**
+     * 获取token
+     * @param string $name token名
+     * @return string
+     */
+    protected function getToken($name=null){
+        if($name == null){
+            return $_SESSION['token'];
+        }else{
+            return $_SESSION[$name];
+        }
     }
 }
