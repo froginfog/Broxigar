@@ -20,22 +20,22 @@ class cache {
         $this->makeDir($path);
     }
 
-    public function read($key, $lifeTime=null){
+    public function read($key){
         $filename = $this->getFilename($key);
         if($data = @file_get_contents($filename)){
             $res = unserialize($data);
-            $lt = $res['createtime'] + $lifeTime;
-            if($lt > time() || $lifeTime == null){
+            $lt = $res['createtime'] + $res['lifetime'];
+            if($lt > time()){
                 return $res['data'];
             }
         }
         return false;
     }
 
-    public function write($key, $data){
+    public function write($key, $data, $lifetime=null){
         $filename = $this->getFilename($key);
         if($handle = fopen($filename, 'w+')){
-            $datas = serialize(array('data'=>$data, 'createtime'=>time()));
+            $datas = serialize(array('data'=>$data, 'createtime'=>time(), 'lifetime'=>$lifetime));
             flock($handle, LOCK_EX);
             $res = fwrite($handle, $datas);
             flock($handle, LOCK_UN);
