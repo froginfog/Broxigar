@@ -48,8 +48,8 @@ class cache {
     }
 
     public function delete($key=null){
-        $handle = opendir($this->dir);
         if($key == null) {
+            $handle = opendir($this->dir);
             while (($file = readdir($handle)) !== false) {
                 if ($file != '.' && $file != '..') {
                     $fullPath = $this->dir . '/' . $file;
@@ -60,6 +60,7 @@ class cache {
                     }
                 }
             }
+            closedir($handle);
         }else{
             unlink($this->getFilename($key));
         }
