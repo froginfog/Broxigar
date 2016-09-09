@@ -88,10 +88,10 @@ class DB {
     /**
      * 传入的数组形如：
      * array(
-        array('value'=>1, 'type'=>PDO::PARAM_int),
-        array('value'=>'shit', 'type'=>PDO::PARAM_str),
-        array('value'=>'shit@qq.com', 'type'=>PDO::PARAM_str)
-       );
+     *   array('value'=>1, 'type'=>PDO::PARAM_int),
+     *   array('value'=>'shit', 'type'=>PDO::PARAM_str),
+     *   array('value'=>'shit@qq.com', 'type'=>PDO::PARAM_str)
+     *  );
      * @param array $arr
      * @return $this
      */
