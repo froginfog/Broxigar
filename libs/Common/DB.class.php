@@ -1,8 +1,12 @@
 <?php
+
+/**
+ * Class DB 用这个类操作数据库必须配合try catch
+ */
 class DB {
-    private $dbConfig = [];
-    private $link = null;
+    private $dbh = null;
     private static $instance = null;
+    private $stmt;
 
     public static function getInstance(){
         if(is_null(self::$instance)){
@@ -11,176 +15,126 @@ class DB {
         return self::$instance;
     }
 
-    private function __clone() {}
+    private function __clone(){}
 
     private function __construct(){
         global $config;
-        $this->dbConfig = [
-            'hostname' => $config['DB_HOST'],
-            'username' => $config['DB_USER'],
-            'password' => $config['DB_PWD'],
-            'host'     => $config['DB_HOST'],
-            'port'     => $config['DB_PORT'],
-            'charset'  => $config['DB_CHARSET'],
-            'dsn'      => $config['DB_TYPE'].':host='.$config['DB_HOST'].';dbname='.$config['DB_NAME'].';charset='.$config['DB_CHARSET']
-        ];
-        $dbConfig = $this->dbConfig;
-        try {
-            $this->link = new PDO($dbConfig['dsn'], $dbConfig['username'], $dbConfig['password']);
-            $this->link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        } catch (PDOException $e) {
-            $this->err($e);
+        $dsn = $config['DB_TYPE'].':host='.$config['DB_HOST'].';dbname='.$config['DB_NAME'].';charset='.$config['DB_CHARSET'];
+        try{
+            $this->dbh = new PDO($dsn, $config['DB_USER'], $config['DB_PWD']);
+        }catch (PDOException $e){
+            die($e->getMessage());
         }
-        $this->link->exec('set names ' . $dbConfig['charset']);
-    }
-
-    public function __destruct(){
-        self::close();
-    }
-
-    /**
-     * 为SQL语句中的字符串添加引号
-     * @param $str
-     * @return string
-     */
-    public function quote($str){
-        return $this->link->quote($str);
-    }
-    /*
-    private function parseCondition($arr){
-        $str = "";
-        foreach($arr as $k=>$v){
-            if($str == ""){
-                $sep = "";
-            }else{
-                $sep = ",";
-            }
-            $str .= $sep."`".$k."`"."='".$v."'";
-        }
-        return $str;
-    }*/
-    /**
-     * 为bindValue生成带占位符的字符串
-     * @param $arr
-     * @return string
-     */
-    private function parseCondition($arr){
-        $str = "";
-        foreach($arr as $k=>$v){
-            if($str == ""){
-                $sep = "";
-            }else{
-                $sep = ",";
-            }
-            $str .= $sep."`".$k."`"."=:".$k;
-        }
-        return $str;
-    }
-
-    public function count($sql){
-        $stmt = $this->link->prepare($sql);
-        $stmt ->execute();
-        return $stmt->fetchColumn();
-    }
-
-    public function getAll($sql){
-        $stmt = $this->link -> prepare($sql);
-        $stmt ->execute();
-        $res = $stmt -> fetchAll(PDO::FETCH_ASSOC);
-        return $res;
-    }
-
-    public function getOne($sql){
-        $stmt = $this->link -> prepare($sql);
-        $stmt ->execute();
-        $res = $stmt -> fetch(PDO::FETCH_ASSOC);
-        return $res;
-    }
-
-    /**
-     * insert into table (col1, col2, col3) values ('v1', 'v2', 'v3')
-     * @param string $table
-     * @param array $arr
-     */
-    public function insert($table, $arr){
-        $keys = "`". join("`,`", array_keys($arr)) ."`";
-        //$values = "'". join("','", array_values($arr)) ."'";
-        $placeHolder = '';
-        foreach ($arr as $k=>$v){
-            if($placeHolder == ''){
-                $sep = ':';
-            }else{
-                $sep = ',:';
-            }
-            $placeHolder .= $sep.$k;
-        }
-        $sql = "insert into `$table` ($keys) values ($placeHolder)";
-        $stmt = $this->link -> prepare($sql);
-        foreach($arr as $key=>$value){
-            $stmt->bindValue(':'.$key, $value);
-        }
-        $stmt -> execute();
-        //return $this->link -> lastInsertId();
-    }
-
-    /**
-     * update table set col1=v1, col2=v2 where blabla
-     * @param string $table
-     * @param array $arr
-     * @param array $where
-     * @return int
-     */
-    public function update($table, $arr, $where){
-        $condition = $this->parseCondition($arr);
-        $_where = $this->parseCondition($where);
-        $_where = ' where '.$_where;
-        $bind = array_merge($arr, $where);
-        $sql = "update `$table` set $condition $_where";
-        $stmt = $this->link -> prepare($sql);
-        foreach($bind as $key=>$value){
-            $stmt->bindValue(':'.$key, $value);
-        }
-        $stmt -> execute();
-        return $stmt->rowCount();
-    }
-
-    /**
-     * delete from table where blabla
-     * @param string $table
-     * @param array $arr
-     * @return int
-     */
-    public function delete($table, $arr){
-        $where = $this->parseCondition($arr);
-        $sql = "delete from $table where $where";
-        $stmt = $this->link -> prepare($sql);
-        foreach($arr as $key=>$value){
-            $stmt->bindValue(':'.$key, $value);
-        }
-        $stmt -> execute();
-        return $stmt -> rowCount();
-    }
-
-    /**
-     * 执行复杂的update、insert、delete时可以调用这个方法。
-     * @param string $sql
-     * @return int
-     */
-    public function doSql($sql){
-        $count = $this->link -> exec($sql);
-        return $count;
+        $this->dbh->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        //$this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        $this->dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        $this->exec('set names '.$config['DB_CHARSET']);
     }
 
     public function lastInsertId(){
-        return $this->link->lastInsertId();
+        return $this->dbh->lastInsertId();
     }
 
-    private function err($err){
-        die('错误：'.$err);
+
+    private function getErr(){
+        $msg = $this->dbh->errorInfo()[2];
+        if(!is_null($msg)){
+            throw new PDOException('database error:'.$msg);
+        }
     }
 
-    private function close(){
-        $this->link = null;
+    /**
+     * select查询
+     * @param string $sql
+     * @return $this
+     */
+    public function query($sql){
+        $this->stmt = $this->dbh->query($sql);
+        $this->getErr();
+        return $this;
+    }
+
+    public function getOne(){
+        return $this->stmt->fetch();
+    }
+
+    public function getAll(){
+        return $this->stmt->fetchAll();
+    }
+
+    /**
+     * 除select之外其他操作
+     * @param string $sql
+     * @return string
+     */
+    public function exec($sql){
+        $res = $this->dbh->exec($sql);
+        $this->getErr();
+        return $res;
+    }
+
+    /**
+     * 准备sql语句，采用问号占位符的sql
+     * select * from user where id=? and username=? and email=?
+     * @param string $sql
+     * @return $this
+     */
+    public function prepare($sql){
+        $this->stmt = $this->dbh->prepare($sql);
+        $this->getErr();
+        return $this;
+    }
+
+    /**
+     * 传入的数组形如：
+     * array(
+        array('value'=>1, 'type'=>PDO::PARAM_int),
+        array('value'=>'shit', 'type'=>PDO::PARAM_str),
+        array('value'=>'shit@qq.com', 'type'=>PDO::PARAM_str)
+       );
+     * @param array $arr
+     * @return $this
+     */
+    public function bindValue($arr){
+        foreach ($arr as $k=>$v){
+            $this->stmt->bindValue($k+1, $v['value'], $v['type']);
+        }
+        return $this;
+    }
+
+    public function execute(){
+        return $this->stmt->execute();
+    }
+
+    public function rowCount(){
+        return $this->stmt->rowCount();
+    }
+
+    public function beginTransaction(){
+        $this->dbh->setAttribute(PDO::ATTR_AUTOCOMMIT,false);
+        return $this->dbh->beginTransaction();
+    }
+
+    public function commit(){
+        return $this->dbh->commit();
+    }
+
+    public function rollBack(){
+        return $this->dbh->rollBack();
+    }
+
+    /**
+     * 如果事务结束后还要继续操作数据库请调用
+     */
+    public function endTransaction(){
+        $this->dbh->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
+        //$this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+    }
+    public function getAttrivbute($attr){
+        echo $this->dbh->getAttribute($attr);
+    }
+
+    public function count(){
+        return $this->stmt->fetchColumn();
     }
 }
