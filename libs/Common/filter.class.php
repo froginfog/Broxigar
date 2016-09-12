@@ -7,26 +7,27 @@ class filter {
      * @return mixed $res 返回被过滤后的值
      */
     public static function gp($key, $type=null){
-        $res = '';
         if(is_array($key)){
+            $res = array();
             foreach($key as $k){
                 if($type == 'get'){
-                    $res = self::filterEscape($_GET[$k]);
+                    $res[$k] = self::filterEscape($_GET[$k]);
                 }
                 if($type == 'post'){
-                    $res = self::filterEscape($_POST[$k]);
+                    $res[$k] = self::filterEscape($_POST[$k]);
                 }
                 if($type == null){
                     if(isset($_GET[$k])){
-                        $res = self::filterEscape($_GET[$k]);
+                        $res[$k] = self::filterEscape($_GET[$k]);
                     }
                     if(isset($_POST[$k])){
-                        $res = self::filterEscape($_POST[$k]);
+                        $res[$k] = self::filterEscape($_POST[$k]);
                     }
                 }
             }
             return $res;
         }else{
+            $res = '';
             if($type == 'get'){
                 $res = self::filterEscape($_GET[$key]);
             }
