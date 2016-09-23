@@ -90,19 +90,19 @@ class auth{
      * 登出
      */
     public function logout(){
-        $this->uid = 0;
-        $this->access_level = 0;
-        $this->uname = '';
-        $this->pwd = '';
-        $_SESSION['uid'] = 0;
+        $this->uid = null;
+        $this->access_level = null;
+        $this->uname = 'guest';
+        $this->pwd = null;
+        $_SESSION['uid'] = null;
         $_SESSION['username'] = 'guest';
-        $_SESSION['pwd'] = '';
-        $_SESSION['access_level'] = 0;
+        $_SESSION['pwd'] = null;
+        $_SESSION['access_level'] = null;
         if($this->allow_cookie){
             setcookie('username', 'guest', time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-            setcookie('password', '', time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-            setcookie('uid', 0, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-            setcookie('access_level', 0, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
+            setcookie('password', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
+            setcookie('uid', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
+            setcookie('access_level', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
         }
     }
 
@@ -110,10 +110,10 @@ class auth{
      * 读取session cookie判断能否登录
      */
     public function init(){
-        $this->uid = 0;
-        $this->access_level = 0;
+        $this->uid = null;
+        $this->access_level = null;
         $this->uname = 'guest';
-        $this->pwd = '';
+        $this->pwd = null;
         if($this->checkSession()){
             return true;
         }else{
@@ -123,7 +123,7 @@ class auth{
 
 
     private function checkSession(){
-        if($this->decode($_SESSION['uid']) != '0'){
+        if(!is_null($_SESSION['uid'])){
             return $this->check($this->decode($_SESSION['username']), $this->decode($_SESSION['pwd']));
         }else{
             return false;
@@ -131,7 +131,7 @@ class auth{
     }
 
     private function checkCookie(){
-        if($this->allow_cookie && $this->decode($_COOKIE['uid']) != '0'){
+        if($this->allow_cookie && !is_null($_COOKIE['uid'])){
             return $this->check($this->decode($_COOKIE['username']), $this->decode($_COOKIE['password']));
         }else{
             return false;
