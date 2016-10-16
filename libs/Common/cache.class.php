@@ -25,7 +25,7 @@ class cache {
         if($data = @file_get_contents($filename)){
             $res = unserialize($data);
             $lt = $res['createtime'] + $res['lifetime'];
-            if($lt > time()){
+            if($lt > time() || is_null($res['lifetime'])){
                 return $res['data'];
             }
         }
