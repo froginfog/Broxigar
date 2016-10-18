@@ -25,7 +25,7 @@ class cache {
         if($data = @file_get_contents($filename)){
             $res = unserialize($data);
             $lt = $res['createtime'] + $res['lifetime'];
-            if($lt > time() || is_null($res['lifetime'])){
+            if($lt > time() || $res['lifetime'] ==null){
                 return $res['data'];
             }
         }
@@ -54,6 +54,7 @@ class cache {
                 if ($file != '.' && $file != '..') {
                     $fullPath = $this->dir . '/' . $file;
                     if (is_dir($fullPath)) {
+                        $this->dir = $fullPath;
                         $this->delete($key);
                     } else {
                         unlink($fullPath);
@@ -62,7 +63,11 @@ class cache {
             }
             closedir($handle);
         }else{
-            unlink($this->getFilename($key));
+            if(file_exists($this->getFilename($key))) {
+                unlink($this->getFilename($key));
+            }else{
+                return true;
+            }
         }
     }
 }
