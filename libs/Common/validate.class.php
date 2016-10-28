@@ -2,7 +2,7 @@
 class validate {
     private $regEx = array(
         'chinese' => '/^[\x{4e00}-\x{9fa5}]+$/u',
-        'english' => '/^[A-Za-z]$/',
+        'english' => '/^[A-Za-z]+$/',
         'number'  => '/^[0-9]+$/',
         'email'   => '/^\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}$/',
         'url'     => '/^((https|http|ftp|rtsp|mms)?:\/\/)[^\s]+/',
