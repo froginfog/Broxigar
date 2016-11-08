@@ -6,6 +6,7 @@ class auth{
     private $select_uname;
     private $select_upwd;
     private $select_uaccesslevel;
+    private $select_isactive;
 
     //cookie设置
     private $allow_cookie = false; //是否允许通过cookie登录
@@ -13,7 +14,7 @@ class auth{
     private $cookie_where;
     private $cookie_domain;
     private $cookie_secure;
-    private $cookie_http;
+    const cookie_http = true;
 
     private $uid;
     private $uname;
@@ -32,6 +33,7 @@ class auth{
         $this->select_uname = $config['select_uname'] ? $config['select_uname'] : 'username';
         $this->select_upwd = $config['select_upwd'] ? $config['select_upwd'] : 'password';
         $this->select_uaccesslevel = $config['select_uaccesslevel'] ? $config['select_uaccesslevel'] : 'access_level';
+        $this->select_isactive = $config['is_active'] ? $config['is_active'] : 'is_active';
     }
 
     /**
@@ -44,7 +46,6 @@ class auth{
         $this->cookie_where = $config['cookie_where'];
         $this->cookie_domain = $config['cookie_domain'];
         $this->cookie_secure = $config['cookie_secure'];
-        $this->cookie_http = $config['cookie_http'];
     }
 
     /**
@@ -54,7 +55,7 @@ class auth{
      * @return bool
      */
     public function login($_username, $_pwd){
-        $sql = 'select '.$this->select_uid.','.$this->select_uaccesslevel.' from '.$this->select_table.' where '.$this->select_uname.'=? and '.$this->select_upwd.'=?';
+        $sql = 'select '.$this->select_uid.','.$this->select_uaccesslevel.' from '.$this->select_table.' where '.$this->select_uname.'=? and '.$this->select_upwd.'=? and '.$this->select_isactive.'=1';
         $arr = array(
             array('value'=>$_username, 'type'=>PDO::PARAM_STR),
             array('value'=>$_pwd, 'type'=>PDO::PARAM_STR)
@@ -75,10 +76,10 @@ class auth{
             $_SESSION['pwd'] = $this->pwd;
             $_SESSION['access_level'] = $this->access_level;
             if($this->allow_cookie){
-                setcookie('username', $this->uname, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-                setcookie('password', $this->pwd, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-                setcookie('uid', $this->uid, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-                setcookie('access_level', $this->access_level, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
+                setcookie('username', $this->uname, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
+                setcookie('password', $this->pwd, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
+                setcookie('uid', $this->uid, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
+                setcookie('access_level', $this->access_level, time()+$this->cookie_expire, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
             }
             return true;
         }else{
@@ -99,10 +100,10 @@ class auth{
         $_SESSION['pwd'] = null;
         $_SESSION['access_level'] = null;
         if($this->allow_cookie){
-            setcookie('username', 'guest', time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-            setcookie('password', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-            setcookie('uid', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
-            setcookie('access_level', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, $this->cookie_http);
+            setcookie('username', 'guest', time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
+            setcookie('password', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
+            setcookie('uid', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
+            setcookie('access_level', null, time()-1, $this->cookie_where, $this->cookie_domain, $this->cookie_secure, self::cookie_http);
         }
     }
 
@@ -121,7 +122,6 @@ class auth{
         }
     }
 
-
     private function checkSession(){
         if(!is_null($_SESSION['uid'])){
             return $this->check($this->decode($_SESSION['username']), $this->decode($_SESSION['pwd']));
@@ -139,7 +139,7 @@ class auth{
     }
 
     private function check($username, $pwd){
-        $sql = 'select '.$this->select_uid.','.$this->select_uaccesslevel.','.$this->select_upwd.' from '.$this->select_table.' where '.$this->select_uname.'=?';
+        $sql = 'select '.$this->select_uid.','.$this->select_uaccesslevel.','.$this->select_upwd.' from '.$this->select_table.' where '.$this->select_uname.'=? and '.$this->select_isactive.'=1';
         $arr = array(
             array('value'=>$username, 'type'=>PDO::PARAM_STR)
         );
@@ -160,7 +160,7 @@ class auth{
         }
     }
 
-    public function encode($str){
+    private function encode($str){
         $str = (string)$str;
         $encrypt_key = md5(mt_rand(0, 32000));
         $ctr = 0;
