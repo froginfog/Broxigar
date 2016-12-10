@@ -28,14 +28,19 @@ class basicController {
         header("status: 404 Not Found");
     }
 
+    /**
+     * @param string $url '/admin/index'
+     */
     protected function goBack($url=null){
         if(is_null($url)) {
             $url = $_SERVER['HTTP_REFERER'];
             header("location:$url");
         }else{
-            global $router;
-            $start = new router();
-            $start -> match($url, $router);
+            global $config;
+            $host = $_SERVER['HTTP_HOST'];
+            $url = $config['ROOT'].$url;
+            header("location:$host$url");
+            exit;
         }
     }
 
